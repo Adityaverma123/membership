@@ -11,8 +11,30 @@ Simple Java + Spring Boot 3 backend for tiered membership subscriptions.
 - Gradle
 
 ## Build 
-
+The build automatically generates OpenAPI server interfaces and DTO models from spec.yaml.
 ./gradlew clean build
+Generated sources are created during build using OpenAPI Generator.
+
+## OpenAPI-First Development
+
+The API contract is maintained in: [spec.yaml](/Users/adityaverma/Projects/membership-program/spec.yaml):
+This project uses:
+
+OpenAPI Generator
+interface-first Spring APIs
+generated DTO models/interfaces
+
+Generated code includes:
+
+API interfaces
+request/response DTOs
+OpenAPI models
+
+Manual generation (optional):
+```bash
+./gradlew openApiGenerate
+```
+Normally this is NOT required because generation already runs during build.
 ## Run Locally
 
 Run the service:
@@ -73,15 +95,6 @@ Cancel:
 curl -X POST http://localhost:8080/membership/v1/users/cancel \
   -H 'X-User-Id: user-1'
 ```
-
-## Development
-
-Generate API code from [spec.yaml](/Users/adityaverma/Projects/membership-program/spec.yaml):
-
-```bash
-./gradlew openApiGenerate
-```
-
 
 Flyway migrations live in [src/main/resources/db/migration](/Users/adityaverma/Projects/membership-program/src/main/resources/db/migration).
 
