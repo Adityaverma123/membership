@@ -89,7 +89,6 @@ Flyway migrations live in [src/main/resources/db/migration](/Users/adityaverma/P
 
 - Plans are purchased and tiers are earned
 - Tiers are computed from configurable tier rules.
-- Current monthly order value is read from the current month aggregate row.
 - Raw orders are not stored.
 - Internal order ingestion api updates the monthly aggregate which mocks order event.
 - Cohort matching is intentionally represented as a small resolver in `MembershipService`; it can be replaced by a user/cohort service later without changing tier rule storage.
