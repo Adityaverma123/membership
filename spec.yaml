@@ -1,0 +1,257 @@
+openapi: 3.0.3
+info:
+  title: FirstClub Membership Service
+  version: 1.0.0
+tags:
+  - name: Plans
+  - name: Tiers
+  - name: UserMemberships
+  - name: InternalOrders
+paths:
+  /membership/v1/plans:
+    get:
+      tags: [Plans]
+      operationId: getMembershipPlans
+      summary: Get active membership plans
+      responses:
+        "200":
+          description: Membership plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MembershipPlan"
+  /membership/v1/tiers:
+    get:
+      tags: [Tiers]
+      operationId: getMembershipTiers
+      summary: Get active membership tiers
+      responses:
+        "200":
+          description: Membership tiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MembershipTier"
+  /membership/v1/users/subscribe:
+    post:
+      tags: [UserMemberships]
+      operationId: subscribeUser
+      summary: Subscribe user to a membership plan
+      parameters:
+        - $ref: "#/components/parameters/XUserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscribeRequest"
+      responses:
+        "201":
+          description: Created user membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMembership"
+  /membership/v1/users/membership:
+    get:
+      tags: [UserMemberships]
+      operationId: getUserMembership
+      summary: Get current user membership
+      parameters:
+        - $ref: "#/components/parameters/XUserId"
+      responses:
+        "200":
+          description: Current user membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMembership"
+  /membership/v1/users/cancel:
+    post:
+      tags: [UserMemberships]
+      operationId: cancelUserMembership
+      summary: Cancel current user membership
+      parameters:
+        - $ref: "#/components/parameters/XUserId"
+      responses:
+        "200":
+          description: Cancelled user membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMembership"
+  /membership/v1/users/evaluate-tier:
+    post:
+      tags: [UserMemberships]
+      operationId: evaluateUserTier
+      summary: Evaluate and assign user's highest matching membership tier
+      parameters:
+        - $ref: "#/components/parameters/XUserId"
+      responses:
+        "200":
+          description: Updated user membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MembershipTier"
+  /membership/v1/internal/orders:
+    post:
+      tags: [InternalOrders]
+      operationId: ingestOrder
+      summary: Simulate order ingestion into monthly aggregates
+      parameters:
+        - $ref: "#/components/parameters/XUserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderIngestionRequest"
+      responses:
+        "202":
+          description: Updated monthly aggregate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMonthlyOrdersMeta"
+components:
+  parameters:
+    XUserId:
+      name: X-User-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+  schemas:
+    SubscribeRequest:
+      type: object
+      required: [membershipPlanId]
+      properties:
+        membershipPlanId:
+          type: integer
+          format: int64
+          minimum: 1
+    OrderIngestionRequest:
+      type: object
+      required: [orderValue]
+      properties:
+        orderValue:
+          type: number
+          minimum: 0.01
+    MembershipPlan:
+      type: object
+      required: [id, name, duration, status, price]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        duration:
+          $ref: "#/components/schemas/PlanDuration"
+        status:
+          $ref: "#/components/schemas/RecordStatus"
+        price:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    MembershipTier:
+      type: object
+      required: [id, name, type, status]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/TierType"
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/RecordStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UserMembership:
+      type: object
+      required: [id, userId, membershipPlan, membershipTier, startAt, endAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: string
+        membershipPlan:
+          $ref: "#/components/schemas/MembershipPlan"
+        membershipTier:
+          $ref: "#/components/schemas/MembershipTier"
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UserMonthlyOrdersMeta:
+      type: object
+      required: [id, userId, year, month, totalOrders, totalOrderValue]
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: string
+        year:
+          type: integer
+        month:
+          type: integer
+        totalOrders:
+          type: integer
+        totalOrderValue:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    PlanDuration:
+      type: string
+      enum: [MONTHLY, QUARTERLY, YEARLY]
+    TierType:
+      type: string
+      enum: [SILVER, GOLD, PLATINUM]
+    RecordStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
